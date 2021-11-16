@@ -35,15 +35,21 @@ pf = @(t) af*fs(t-t0);
 
 %% generating output spectrum
 w = in_pulse.wavelengths;
+edge_db_left = 10*log10(r(1));
+edge_db_right = 10*log10(r(end));
 spectrumf = zeros(1,length(w));
 for i = 1:length(w)
     index = find(abs(wavelengths - w(i))<=1e-2);
     if ~isempty(index)
         if(length(index)>1)
-            spectrumf(i) = in_pulse.spectrum(i)*r(index(1));
+            spectrumf(i) = in_pulse.spectrum(i) + 10*log10(r(index(1)));
         else
-            spectrumf(i) = in_pulse.spectrum(i)*r(index);
+            spectrumf(i) = in_pulse.spectrum(i) + 10*log10(r(index));
         end
+    elseif i < length(w)/2
+        spectrumf(i) = in_pulse.spectrum(i) + edge_db_left;
+    else
+        spectrumf(i) = in_pulse.spectrum(i) + edge_db_right;
     end
 end   
 

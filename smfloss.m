@@ -19,8 +19,8 @@ defaults(1:nopin) = varargin;
 [alpha,So] = defaults{:};
 
 %% dispersion calculation
-%rms spectrum width of input pulse
-sigmaw = pulsewidth(in_pulse.spectrum,in_pulse.wavelengths);
+%FWHM width of optical spectrum of laser pulse
+sigmaw = pulsewidth(10.^(in_pulse.spectrum/10),in_pulse.wavelengths);
 %total dispersoin in ps/nm.km
 Dt = (So*1550/4)*(1 - (1310/1550)^4);
 %pulse broadening calculation in ps
@@ -35,6 +35,9 @@ pulsei = in_pulse.pulse(t);
 %max value index
 [~,t0] = max(pulsei);
 %scaling factor
+if isempty(pulsewidth(pulsei,t))
+    error('smfloss: cannot calculate pulse width: broaden pulse')
+end
 sf = pulsewidth(pulsei,t)/(pulsewidth(pulsei,t) + pulse_inc);
 %shifting to center 
 fc = @(t)in_pulse.pulse(t+t0);
@@ -43,12 +46,13 @@ fs = @(t)fc(t*sf);
 %shifting back
 pulsef = @(t) af*fs(t-t0);
 
-spectrumf = af*in_pulse.spectrum;
+spectrumf = in_pulse.spectrum - dbloss;
 out_pulse = struct('pulse',pulsef,'spectrum',spectrumf,'wavelengths',in_pulse.wavelengths);
 
 fprintf('rms spectrum width:'); disp(sigmaw);
 fprintf('Dispersion parameter:'); disp(Dt);
 fprintf('dispersion inc/km:'); disp(pulse_inc/L);
+fprintf('dispersion introduce (in ps):'); disp(pulse_inc);
 end
 
 
