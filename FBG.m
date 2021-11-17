@@ -10,14 +10,19 @@
 %                                       1 - uniform
 %                                       2 - gaussian
 %                                       3 - raised cosine
-function [r,tau,w] = FBG(varargin)
+% output arguement:   FBG structure 
+%                     r       reflectence coeff. of each wavelength
+%                     tau     time delay of each wavelength
+%                     w       wavelength array used for computation 
+%                     
+function [fbg_spectrum] = FBG(varargin)
 %% input grating parameter
 % setting up default values
 if length(varargin)>5
     error('Too Many Arguements in FBG function')
 end
 
-defaults = {0.5,1.4682,0.0004,-2.5,1};
+defaults = {0.5,1.4682,0.0004,2.5,1};
 defaults(1:nargin) = varargin;
 
 [Lg,neff,del_neff,chirp_var,epodize_fxn_choice] = defaults{:};
@@ -48,7 +53,7 @@ switch epodize_fxn_choice
 end
 
 %% wavelength span for FBG
-% 2nm wavelenght span 
+% 10nm wavelenght span 
 %total number of points for calculation
 M = round(10/del_w);
 %input wavelength
@@ -62,7 +67,6 @@ phi=zeros(1,length(w));
 
 %% transmisson matrix method
 dz = dz*1e-2;
-z = z*1e-2;
 for i = 1:M
     %DC coupling coefficient
     sigmaz = (2*pi*neff)*(1./w(i) - 1./wb) + (2*pi*del_neff)./w(i) - chirp;
@@ -93,9 +97,11 @@ s = std(dtg);
 % plot(diff(dtg))
 dtg(abs([0 diff(dtg)])>s) = nan;
 
-tau = -((w.^2)/(2*pi*3e8)).*(dtg/del_w)*1e12;
+tau = -((w.^2)/(2*pi*3e-2)).*(dtg/del_w)*1e12;
 %conerting back to nm
 w = w*1e9;
+
+fbg_spectrum = struct('r',r,'tau',tau,'w',w);
 
 end %function end
 

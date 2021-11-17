@@ -25,29 +25,31 @@ sigmaw = pulsewidth(10.^(in_pulse.spectrum/10),in_pulse.wavelengths);
 Dt = (So*1550/4)*(1 - (1310/1550)^4);
 %pulse broadening calculation in ps
 pulse_inc = sigmaw*L*Dt;
+%rater of change of group delay w.r.t wavelength (ps/nm)
+Dt_per_w = Dt*L;
 
-%% signal attenuatoin in db
-dbloss = alpha*L;
-af = 10^(-dbloss/10);
+%% attenuating spetcrum
+spectrumf = in_pulse.spectrum - alpha*L;
+af = 10^(-alpha*L);
+
 %% generating output pulse
-t = linspace(0,1e4,1e4);
-pulsei = in_pulse.pulse(t);
-%max value index
-[~,t0] = max(pulsei);
-%scaling factor
-if isempty(pulsewidth(pulsei,t))
-    error('smfloss: cannot calculate pulse width: broaden pulse')
+t = in_pulse.t;
+%calculating delay for each wavelength w.r.t 1550nm (in ps)
+tg = Dt_per_w*(in_pulse.wavelengths - 1550);
+%converting to index shift
+Ng = round(tg/(t(2)-t(1)));
+res_pulse = af*in_pulse.pulse;
+%inserting delay
+for i = 1:length(Ng)
+    res_pulse(i,:) = circshift(res_pulse(i,:),Ng(i));
 end
-sf = pulsewidth(pulsei,t)/(pulsewidth(pulsei,t) + pulse_inc);
-%shifting to center 
-fc = @(t)in_pulse.pulse(t+t0);
-%scaling
-fs = @(t)fc(t*sf);
-%shifting back
-pulsef = @(t) af*fs(t-t0);
 
-spectrumf = in_pulse.spectrum - dbloss;
-out_pulse = struct('pulse',pulsef,'spectrum',spectrumf,'wavelengths',in_pulse.wavelengths);
+figure
+plot(Ng)
+title('index change per wavelength')
+
+%% saving output pulse
+out_pulse = struct('t',t,'pulse',res_pulse,'spectrum',spectrumf,'wavelengths',in_pulse.wavelengths);
 
 fprintf('rms spectrum width:'); disp(sigmaw);
 fprintf('Dispersion parameter:'); disp(Dt);
