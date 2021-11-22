@@ -37,16 +37,16 @@ t = in_pulse.t;
 %calculating delay for each wavelength w.r.t 1550nm (in ps)
 tg = Dt_per_w*(in_pulse.wavelengths - 1550);
 %converting to index shift
-Ng = round(tg/(t(2)-t(1)));
+Ng = -round(tg/(t(2)-t(1)));
 res_pulse = af*in_pulse.pulse;
 %inserting delay
 for i = 1:length(Ng)
     res_pulse(i,:) = circshift(res_pulse(i,:),Ng(i));
 end
 
-figure
-plot(Ng)
-title('index change per wavelength')
+% figure
+% plot(Ng)
+% title('index change per wavelength')
 
 %% saving output pulse
 out_pulse = struct('t',t,'pulse',res_pulse,'spectrum',spectrumf,'wavelengths',in_pulse.wavelengths);
@@ -55,6 +55,7 @@ fprintf('rms spectrum width:'); disp(sigmaw);
 fprintf('Dispersion parameter:'); disp(Dt);
 fprintf('dispersion inc/km:'); disp(pulse_inc/L);
 fprintf('dispersion introduce (in ps):'); disp(pulse_inc);
+fprintf([repmat('#',1,100) '\n'])
 end
 
 

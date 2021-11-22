@@ -22,7 +22,7 @@ if length(varargin)>5
     error('Too Many Arguements in FBG function')
 end
 
-defaults = {0.5,1.4682,0.0004,2.5,1};
+defaults = {0.5,1.4682,0.0004,-1,1};
 defaults(1:nargin) = varargin;
 
 [Lg,neff,del_neff,chirp_var,epodize_fxn_choice] = defaults{:};
@@ -45,7 +45,7 @@ switch epodize_fxn_choice
     case 1
         gz = ones(1,N); %uniform chirp
     case 2
-        gz = exp(-64*((z - Lg/2)/Lg).^4); %gaussian profile
+        gz = exp(-log(2)*(2*(z - Lg/2)/(0.4*Lg)).^2); %gaussian profile
     case 3
         gz = 0.5*(1 + cos(pi*(z - Lg/2)/Lg)); %raised cosine 
     otherwise
@@ -97,7 +97,7 @@ s = std(dtg);
 % plot(diff(dtg))
 dtg(abs([0 diff(dtg)])>s) = nan;
 
-tau = -((w.^2)/(2*pi*3e-2)).*(dtg/del_w)*1e12;
+tau = -((w.^2)/(2*pi*3e-1)).*(dtg/del_w)*1e12;
 %conerting back to nm
 w = w*1e9;
 

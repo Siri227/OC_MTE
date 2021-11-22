@@ -36,7 +36,7 @@ plot(t,pulse(40,:))
 plot(t,pulse(50,:))
 plot(t,pulse(70,:))
 xlabel('time in ps')
-ylabel('amplitude')
+ylabel('normalized power')
 title('input pulse')
 legend('combined wave packet',['w = ' num2str(wavelengths(40))],...
     ['w = ' num2str(wavelengths(50))],['w = ' num2str(wavelengths(70))]);
@@ -47,6 +47,7 @@ FWHM = 4;
 disp_per_km = smf28.Dt*FWHM; %(ps/km)
 BWL = 1e3/(2*disp_per_km); %(GHz.km)
 Lf = floor(BWL); %in km
+% Lf = 20;
 
 %calling smf fxn for asserting dispersion and attenuation in pulse
 out_pulse1 = smfloss(in_pulse,Lf);
@@ -61,8 +62,8 @@ hold on
 plot(t,pulse1);
 legend(['L =' num2str(Lf)],'input wave');
 xlabel('time in ps')
-ylabel('amplitude')
-title('input wave vs output wave of smf')
+ylabel('normalized power')
+title('input pulse vs output pulse of smf')
 
 subplot(212)
 %ploting optical spectrum of input and output wave
@@ -81,7 +82,22 @@ legend(num2str(wavelengths(10:10:end-10)'))
 title('pulse components')
 
 %% FBG design
-FBG_spectrum = FBG();
+figure
+FBG_use = FBG_param_design(smf28.Dt,smf28.neff);
+FBG_spectrum = FBG_use.spectrum;
+% FBG_spectrum = FBG(1,smf28.neff,0.0004,-0.4,2);
+% figure
+% subplot(211)
+% plot(FBG_spectrum.w,FBG_spectrum.r)
+% xlabel('wavelength nm')
+% ylabel('reflectivity')
+% title('reflectivity')
+% subplot(212)
+% plot(FBG_spectrum.w,FBG_spectrum.tau)
+% xlabel('wavelength nm')
+% ylabel('time delay')
+% title('time delay')
+
 out_pulse2 = compensate(out_pulse1,FBG_spectrum);
 
 res_fbg_out = sum(out_pulse2.pulse);
@@ -92,9 +108,9 @@ plot(t,res_out_pulse);
 hold on
 plot(t,res_fbg_out);
 xlabel('time in ps')
-ylabel('amplitude')
+ylabel('normalized power')
 legend('FBG in','FBG out')
-title('FBG in vs FBG out wave')
+title('FBG in vs FBG out pulse')
 
 subplot(212)
 plot(wavelengths,out_pulse1.spectrum);
@@ -105,6 +121,23 @@ ylabel('normalized power in dB')
 legend('FBG in','FBG out')
 title('optical spectrum') 
 
+figure
+subplot(131)
+patch(t,input_pulse,'blue','FaceAlpha',0.4)
+xlabel('time in ps'); ylabel('amp'); ylim([0 1.2]); 
+title('input signal')
+
+subplot(132)
+patch(t,res_out_pulse/max(res_out_pulse),'red','FaceAlpha',0.4)
+xlabel('time in ps'); ylabel('amp'); ylim([0 1.2]); 
+title(['after smf of L_{f}: ' num2str(Lf) 'km'])
+
+subplot(133)
+patch(t,res_fbg_out/max(res_fbg_out),'green','FaceAlpha',0.4)
+xlabel('time in ps'); ylabel('amp'); ylim([0 1.2]); 
+title('after FBG')
+
+suptitle('FBG compensation result')
 
 
 
